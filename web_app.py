@@ -26,9 +26,15 @@ st.subheader("高精準繁體中文逐字稿產出")
 
 # 側邊欄說明
 with st.sidebar:
-    st.info("💡 **提示**：轉錄速度取決於伺服器效能，大型音檔請耐心等候。")
+    st.info("💡 **提示**：雲端資源有限，建議上傳 50MB 以下的音檔。")
+    model_size = st.selectbox("選擇 AI 模型強度", ["tiny", "base"], index=1, help="tiny 最快但精準度稍低；base 較平衡。")
     st.write("---")
-    st.write("🌐 **版本資訊**：雲端發布版 v1.3")
+    st.write("🌐 **版本資訊**：穩定優化版 v1.4")
+
+# 快取模型載入，避免重複載入耗盡記憶體
+@st.cache_resource
+def load_whisper_model(size):
+    return whisper.load_model(size)
 
 # 自動偵測本地 ffmpeg (僅在本地執行時生效)
 local_ffmpeg_bin = os.path.join(os.getcwd(), "ffmpeg-8.0.1-essentials_build", "bin")
@@ -57,13 +63,13 @@ if uploaded_file is not None:
             progress_bar = st.progress(0)
             
             # --- 步驟 1：載入模型 ---
-            status_placeholder.info("🔄 正在準備 AI 模型，請稍候...")
+            status_placeholder.info(f"🔄 正在準備 AI 模型 ({model_size})...")
             progress_bar.progress(20)
-            model = whisper.load_model("base")
+            model = load_whisper_model(model_size)
             progress_bar.progress(40)
             
             # --- 步驟 2：執行轉錄 ---
-            status_placeholder.info("🎙️ 正在進行轉錄... 這可能需要幾分鐘時間。")
+            status_placeholder.info("🎙️ 正在進行轉錄... 請勿關閉網頁。")
             progress_bar.progress(60)
             
             result = model.transcribe(
