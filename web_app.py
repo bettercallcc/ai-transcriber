@@ -80,24 +80,64 @@ if uploaded_file is not None:
             status_placeholder.success("🎊 轉錄完成！")
             progress_bar.progress(100)
             
-            # 自動儲存到主資料夾
-            output_txt = os.path.join(os.getcwd(), os.path.splitext(uploaded_file.name)[0] + ".txt")
-            with open(output_txt, "w", encoding="utf-8") as f:
-                f.write(text)
-
-            # 顯示結果
+            # 準備 HTML 內容
+            file_title = os.path.splitext(uploaded_file.name)[0]
+            html_report = f"""
+            <!DOCTYPE html>
+            <html lang="zh-TW">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: 'Microsoft JhengHei', sans-serif; line-height: 1.8; color: #333; max-width: 900px; margin: 40px auto; padding: 20px; background: #f9f9f9; }}
+                    .container {{ background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }}
+                    h1 {{ color: #4f46e5; border-bottom: 3px solid #6366f1; padding-bottom: 15px; margin-bottom: 30px; }}
+                    .info {{ display: flex; gap: 20px; color: #666; font-size: 0.9em; margin-bottom: 30px; background: #f0f4ff; padding: 15px; border-radius: 8px; }}
+                    .content {{ white-space: pre-wrap; font-size: 1.1em; letter-spacing: 0.5px; text-align: justify; }}
+                    .footer {{ margin-top: 50px; text-align: center; font-size: 0.8em; color: #999; border-top: 1px solid #eee; padding-top: 20px; }}
+                </style>
+                <title>{file_title} - AI 逐字稿報告</title>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>🎙️ 音檔轉文字逐字稿</h1>
+                    <div class="info">
+                        <span>📄 檔案：{uploaded_file.name}</span>
+                        <span>📅 日期：{time.strftime("%Y-%m-%d %H:%M")}</span>
+                    </div>
+                    <div class="content">{text}</div>
+                    <div class="footer">由 AI 音檔轉文字系統 自動生成</div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # 顯示結果預覽
             st.markdown("### 📝 逐字稿預覽")
             st.text_area("轉錄內容", value=text, height=300)
             
             # 提供下載
-            st.download_button(
-                label="📥 下載文字檔 (.txt)",
-                data=text,
-                file_name=os.path.basename(output_txt),
-                mime="text/plain"
-            )
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button(
+                    label="📥 下載純文字 (.txt)",
+                    data=text,
+                    file_name=f"{file_title}.txt",
+                    mime="text/plain"
+                )
+            with col2:
+                st.download_button(
+                    label="✨ 下載精美報表 (.html)",
+                    data=html_report,
+                    file_name=f"{file_title}.html",
+                    mime="text/html"
+                )
             
-            st.info(f"💾 檔案已同步存入資料夾：`{os.path.basename(output_txt)}`")
+            # 本地同步儲存 (僅限本地執行)
+            try:
+                output_txt = os.path.join(os.getcwd(), f"{file_title}.txt")
+                with open(output_txt, "w", encoding="utf-8") as f:
+                    f.write(text)
+            except: pass
 
         except Exception as e:
             st.error(f"發生錯誤：{str(e)}")
