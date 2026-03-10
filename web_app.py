@@ -1,7 +1,13 @@
 import streamlit as st
-import whisper
+try:
+    import whisper
+except ImportError:
+    st.error("❌ 找不到 `openai-whisper` 模組。請確認您的 GitHub 倉庫中是否有 `requirements.txt` 且內容包含 `openai-whisper`。")
+    st.info("💡 提示：如果剛上傳檔案，Streamlit Cloud 可能還在背景安裝套件，請稍等 1-2 分鐘並重新整理。")
+    st.stop()
 import os
 import time
+import subprocess
 
 # 頁面配置
 st.set_page_config(page_title="AI 音檔轉文字系統", page_icon="🎙️", layout="centered")
